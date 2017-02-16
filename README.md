@@ -1,6 +1,6 @@
 ## SpyKING CIRCUS processor plugin to MountainLab
 
-This project wraps the spike sorting algorithm from [SpyKING CURCUS](http://www.yger.net/software/spyking-circus/) as a processor plugin of [MountainLab](https://github.com/magland/mountainlab).
+This project wraps the spike sorting algorithm from [SpyKING CIRCUS](http://www.yger.net/software/spyking-circus/) as a processor plugin of [MountainLab](https://github.com/magland/mountainlab).
 
 This plugin is at a very early stage and is under prelim development. More info coming soon.
 
