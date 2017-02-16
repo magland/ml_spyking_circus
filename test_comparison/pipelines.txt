@@ -1,0 +1,2 @@
+ms2 mountainsort_002.pipeline --curation=curation.script --mask_out_artifacts_threshold=0
+sc spyking_circus_001.pipeline --spike_thresh=4
