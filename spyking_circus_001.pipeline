@@ -4,7 +4,8 @@ function main(params) {
 		extract_raw_t2:-1,
 		extract_raw_channels:'',
 		samplerate:30000,
-		spike_thresh:6
+		spike_thresh:6,
+		adjacency_radius:1000
 	});
 
 	var raw=params.raw;
@@ -13,15 +14,23 @@ function main(params) {
 			t1:params.extract_raw_t1,t2:params.extract_raw_t2,channels:params.extract_raw_channels
 		}).timeseries_out;
 	}
-
+	
+	if (!params.geom) {
+		if (file_exists(inpath+'/geom.csv')) {
+			params.geom=inpath+'/geom.csv';
+		}
+	}
 	
 	// Clustering
-	var firings1=Process('ml_spyking_circus',{timeseries:raw},{
-			samplerate:params.samplerate,spike_thresh:params.spike_thresh
+	var firings1=Process('ml_spyking_circus',{timeseries:raw,geom:params.geom},{
+			samplerate:params.samplerate,spike_thresh:params.spike_thresh,adjacency_radius:params.adjacency_radius
 		}).firings_out;
 
 	// Write the output
 	write_prv(raw,params.outpath+'/raw.mda.prv');
+	if (params.geom) {
+		write_file(params.geom,params.outpath+'/geom.csv');
+	}
 	write_file(firings1,params.outpath+'/firings.mda');
 
 	run_pipeline();

@@ -8,13 +8,15 @@ function get_spec() {
 	    exe_command: __filename+' $(arguments)',
 	    description: "",
 	    inputs: [
-	        {name: "timeseries"}
+	        {name: "timeseries"},
+	        {name: "geom","optional":true}
 	    ],
 	    outputs: [
 	        {name: "firings_out"}
 	    ],
 	    parameters: [
-	        {name: "samplerate",optional: false},{name:"spike_thresh",optional:true}
+	        {name: "samplerate",optional: false},{name:"spike_thresh",optional:true},
+	        {name: "adjacency_radius",optional: true}
 	    ]
 	});
 	return {processors:processors};
@@ -38,8 +40,9 @@ var tempdir=CLP.namedParameters['_tempdir']||'';
 var num_threads=CLP.namedParameters['_request_num_threads']||os.cpus().length;
 var ppp={};
 ppp.samplerate=CLP.namedParameters['samplerate']||0;
-ppp.geom_radius=100;
 ppp.spike_thresh=CLP.namedParameters['spike_thresh']||6;
+ppp.geom=read_geom_csv_file(CLP.namedParameters['geom']||'');
+ppp.adjacency_radius=CLP.namedParameters['adjacency_radius']||1000;
 
 if (!timeseries) {
 	console.log('timeseries is empty')
@@ -101,10 +104,20 @@ function step2(HH) {
 
 	function fill_in_prb(prb) {
 		prb=strrepl(prb,'$num_channels$',M);
-		prb=strrepl(prb,'$radius$',ppp.geom_radius);
+		prb=strrepl(prb,'$radius$',ppp.adjacency_radius);
+		if (!ppp.geom) {
+			ppp.geom=[];
+			for (var m=0; m<M; m++) {
+				ppp.geom.push([0,m]);
+			}
+		}
+		if (ppp.geom.length!=M) {
+			console.log('Mismatch in length of geom: '+ppp.geom.length+' '+M);
+			process.exit(-1);
+		}
 		var geometry='{\n';
-		for (var m=0; m<M; m++) {
-			geometry+=m+': ['+0+','+m+'],\n';
+		for (var m=0; m<ppp.geom.length; m++) {
+			geometry+=m+': ['+ppp.geom[m][0]+','+ppp.geom[m][1]+'],\n';
 		}
 		geometry+='}';
 		prb=strrepl(prb,'$geometry$',geometry);
@@ -231,6 +244,22 @@ function make_system_call(cmd,args,opts,callback) {
 			callback({stdout:all_stdout,stderr:all_stderr,return_code:code});
 		}
 	}
+}
+
+function read_geom_csv_file(fname) {
+	var geom=[];
+	var txt=read_text_file(fname);
+	var lines=txt.split('\n');
+	for (var i in lines) {
+		var line=lines[i].trim();
+		if (line) {
+			var vals=line.split(',');
+			if (vals.length==2) {
+				geom.push([Number(vals[0].trim()),Number(vals[1].trim())]);
+			}
+		}
+	}
+	return geom;
 }
 
 function strrepl(str,str1,str2) {
