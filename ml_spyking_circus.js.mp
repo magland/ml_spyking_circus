@@ -4,7 +4,7 @@ function get_spec() {
 	var processors=[];
 	processors.push({
 	    name: "ml_spyking_circus",
-	    version: "0.1",
+	    version: "0.11",
 	    exe_command: __filename+' $(arguments)',
 	    description: "",
 	    inputs: [
@@ -15,8 +15,11 @@ function get_spec() {
 	        {name: "firings_out"}
 	    ],
 	    parameters: [
-	        {name: "samplerate",optional: false},{name:"spike_thresh",optional:true},
-	        {name: "adjacency_radius",optional: true}
+	        {name: "samplerate",optional: false},
+	        {name:"spike_thresh",optional:true},
+	        {name:"detect_sign",optional:true},
+	        {name: "adjacency_radius",optional: true},
+	        {name:"max_elts",optional:true} //spyking-circus specific
 	    ]
 	});
 	return {processors:processors};
@@ -41,8 +44,10 @@ var num_threads=CLP.namedParameters['_request_num_threads']||os.cpus().length;
 var ppp={};
 ppp.samplerate=CLP.namedParameters['samplerate']||0;
 ppp.spike_thresh=CLP.namedParameters['spike_thresh']||6;
+ppp.detect_sign=CLP.namedParameters['detect_sign']||0;
 ppp.geom=read_geom_csv_file(CLP.namedParameters['geom']||'');
 ppp.adjacency_radius=CLP.namedParameters['adjacency_radius']||1000;
+ppp.max_elts=CLP.namedParameters['max_elts']||10000;
 
 if (!timeseries) {
 	console.log('timeseries is empty')
@@ -96,9 +101,15 @@ function step2(HH) {
 		params=strrepl(params,'$prb_file$',tempdir+'/mlsc.prb');
 		params=strrepl(params,'$dtype$',HH.data_type_string);
 		params=strrepl(params,'$samplerate$',ppp.samplerate);
-		params=strrepl(params,'$template_width_ms$',3); //Width of the templates [in ms]
+		params=strrepl(params,'$template_width_ms$',2.5); //Width of the templates [in ms]
 		params=strrepl(params,'$spike_thresh$',ppp.spike_thresh); // Threshold for spike detection (e.g., 6)
-		params=strrepl(params,'$peaks$','both'); //positive,negative, or both
+		params=strrepl(params,'$max_elts$',ppp.max_elts);
+
+		var peaks='both';
+		if (ppp.detect_sign>0) peaks='positive';
+		else if (ppp.detect_sign<0) peaks='negative';
+		params=strrepl(params,'$peaks$',peaks); //positive,negative, or both
+
 		return params;
 	}
 

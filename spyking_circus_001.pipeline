@@ -5,7 +5,9 @@ function main(params) {
 		extract_raw_channels:'',
 		samplerate:30000,
 		spike_thresh:6,
-		adjacency_radius:1000
+		detect_sign:0,
+		adjacency_radius:1000,
+		max_elts:10000
 	});
 
 	var raw=params.raw;
@@ -23,7 +25,11 @@ function main(params) {
 	
 	// Clustering
 	var firings1=Process('ml_spyking_circus',{timeseries:raw,geom:params.geom},{
-			samplerate:params.samplerate,spike_thresh:params.spike_thresh,adjacency_radius:params.adjacency_radius
+			samplerate:params.samplerate,
+			spike_thresh:params.spike_thresh,
+			detect_sign:params.detect_sign,
+			adjacency_radius:params.adjacency_radius,
+			max_elts:params.max_elts
 		}).firings_out;
 
 	// Write the output
