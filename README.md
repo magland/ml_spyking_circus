@@ -1,6 +1,6 @@
 # ml_spyking_circus
 
-MountainLab processor package that wraps the [SpyKING Circus] spike sorting algorithm
+MountainLab processor package that wraps the [SpyKING Circus](https://spyking-circus.readthedocs.io/en/latest/) spike sorting algorithm
 
 
 ## Conda installation
