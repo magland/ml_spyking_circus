@@ -51,7 +51,7 @@ class sort(Processor):
     """
         Spike sorting using SpyKING Circus
     """
-    VERSION='0.1.0'
+    VERSION='0.1.2'
 
     timeseries = Input('Input timeseries .mda file (MxN) M=number of channels, N=number of timepoints')
     geom       = Input('Probe geometry .csv file')
@@ -61,8 +61,9 @@ class sort(Processor):
     spike_thresh = FloatParameter('Threshold for detection',optional=True,default=6)
     detect_sign = IntegerParameter('Polarity of the spikes, -1, 0, or 1')
     adjacency_radius = IntegerParameter('Channel neighborhood adjacency radius corresponding to geom file')
-    template_width_ms = FloatParameter('Spyking circus parameter',optional=True,default=2.5)
-    max_elts = IntegerParameter('Spyking circus parameter - I believe it relates to subsampling and affects compute time')
+    template_width_ms = FloatParameter('Spyking circus parameter',optional=True,default=3)
+    whitening_max_elts = IntegerParameter('Spyking circus parameter - I believe it relates to subsampling and affects compute time',optional=True,default=1000)
+    clustering_max_elts = IntegerParameter('Spyking circus parameter - I believe it relates to subsampling and affects compute time',optional=True,default=10000)
     
     def _read_text_file(self,fname):
         with open(fname) as f:
@@ -89,7 +90,7 @@ class sort(Processor):
     def run(self):
         tmpdir=os.environ.get('ML_PROCESSOR_TEMPDIR')
         if not tmpdir:
-            raise 'Environment variable not set: ML_PROCESSOR_TEMPDIR'
+            raise Exception('Environment variable not set: ML_PROCESSOR_TEMPDIR')
         
         source_dir=os.path.dirname(os.path.realpath(__file__))
         
@@ -121,6 +122,7 @@ class sort(Processor):
         txt=txt.replace('$header_size$','{}'.format(HH.header_size))
         txt=txt.replace('$prb_file$',tmpdir+'/geometry.prb')
         txt=txt.replace('$dtype$',HH.dt)
+        txt=txt.replace('$num_channels$','{}'.format(num_channels))
         txt=txt.replace('$samplerate$','{}'.format(self.samplerate))
         txt=txt.replace('$template_width_ms$','{}'.format(self.template_width_ms))
         txt=txt.replace('$spike_thresh$','{}'.format(self.spike_thresh))
@@ -131,7 +133,8 @@ class sort(Processor):
         else:
             peaks_str='both'
         txt=txt.replace('$peaks$',peaks_str)
-        txt=txt.replace('$max_elts$','{}'.format(self.max_elts))
+        txt=txt.replace('$whitening_max_elts$','{}'.format(self.whitening_max_elts))
+        txt=txt.replace('$clustering_max_elts$','{}'.format(self.clustering_max_elts))
         self._write_text_file(tmpdir+'/raw.params',txt)
         
         print('Running spyking circus...')
@@ -139,9 +142,16 @@ class sort(Processor):
         num_threads=1 # for some reason, using more than 1 thread causes an error
         cmd='spyking-circus {} -c {} '.format(tmpdir+'/raw.mda',num_threads)
         print(cmd)
-        self._run_command_and_print_output(cmd)
+        retcode=self._run_command_and_print_output(cmd)
+
+        if retcode != 0:
+            raise Exception('Spyking circus returned a non-zero exit code')
+
+        result_fname=tmpdir+'/raw/raw.result.hdf5'
+        if not os.path.exists(result_fname):
+            raise Exception('Result file does not exist: '+result_fname)
         
-        firings=sc_results_to_firings('tmp/raw/raw.result.hdf5')
+        firings=sc_results_to_firings(result_fname)
         print(firings.shape)
         mdaio.writemda64(firings,self.firings_out)
         
