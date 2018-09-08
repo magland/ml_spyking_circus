@@ -19,3 +19,4 @@ It is also possible to install this software without using conda. See the [Mount
 ## Singularity usage
 
 This repository corresponds to a Singularity container. Therefore it is possible to run these processors without any installation and/or from a shared jupyter notebook.
+
