@@ -2,11 +2,11 @@
 
 import sys
 
-from mountainlab_pytools.mlprocessors.registry import registry, register_processor
+from mlprocessors.registry import registry, register_processor
 
 registry.namespace = "spyking_circus"
 
-from mountainlab_pytools.mlprocessors.core import Input, Output, Processor, IntegerParameter, FloatParameter, StringParameter, IntegerListParameter
+from mlprocessors.core import Input, Output, Processor, IntegerParameter, FloatParameter, StringParameter, IntegerListParameter
 
 import os
 from shutil import copyfile
