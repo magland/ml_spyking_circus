@@ -10,7 +10,7 @@ pkg_name='ml_spyking_circus'
 
 setuptools.setup(
     name=pkg_name,
-    version="0.1.4",
+    version="0.1.5",
     author="Jeremy Magland",
     author_email="",
     description="MountainLab wrapper for spyking circus",
