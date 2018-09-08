@@ -10,7 +10,7 @@ pkg_name='ml_spyking_circus'
 
 setuptools.setup(
     name=pkg_name,
-    version="0.1.3",
+    version="0.1.4",
     author="Jeremy Magland",
     author_email="",
     description="MountainLab wrapper for spyking circus",
@@ -26,6 +26,7 @@ setuptools.setup(
     [
         'numpy',
         'mlprocessors',
+	'mountainlab_pytools',
         'numpydoc',
         'h5py'
     ],
@@ -53,6 +54,7 @@ setuptools.setup(
             "pip",
             "mountainlab",
             "mlprocessors",
+            "mountainlab_pytools",
             "numpy",
             "numpydoc",
             "h5py"
